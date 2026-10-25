@@ -6,7 +6,7 @@ export interface LessonEntry {
 }
 
 export const lessons: LessonEntry[] = [
-  { order: 1,  slug: '01-what-is-confirmation',       title: 'What is Confirmation?',         published: true  },
+  { order: 1,  slug: '01-Intro',       title: 'What is Confirmation?',         published: true  },
   { order: 2,  slug: '02-the-holy-spirit',            title: 'The Holy Spirit',                published: false },
   { order: 3,  slug: '03-gifts-of-the-spirit',        title: 'Gifts of the Holy Spirit',       published: false },
   { order: 4,  slug: '04-fruits-of-the-spirit',       title: 'Fruits of the Holy Spirit',      published: false },
