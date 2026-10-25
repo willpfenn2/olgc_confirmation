@@ -1,86 +1,181 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { lessons } from '../data/lessons';
+import { lessons, formatShortDate, formatLongDate } from '../data/lessons';
 
 const base = import.meta.env.BASE_URL;
 const homeHref = base.endsWith('/') ? base : `${base}/`;
-const firstLesson = lessons.find((l) => l.published);
-const firstLessonHref = firstLesson ? `${homeHref}lessons/${firstLesson.slug}` : homeHref;
+const lessonHref = (slug: string) => `${homeHref}lessons/${slug}`;
+
+// First publishable lesson = fallback for "Current Lesson" if none have happened yet
+const firstPublished = lessons.find((l) => l.clickable);
+const firstLessonHref = firstPublished ? lessonHref(firstPublished.slug) : homeHref;
+
+// Mosaic image slots. Images go in /public/images/mosaic/01.jpg, 02.jpg, ... 06.jpg
+const mosaicImages = Array.from({ length: 6 }, (_, i) => {
+  const n = String(i + 1).padStart(2, '0');
+  return `${homeHref}images/mosaic/${n}.jpg`;
+});
+
+// JSON string embedded in the page so client-side JS can compute "Current Lesson"
+const scheduleJson = JSON.stringify(
+  lessons
+    .filter((l) => l.clickable)
+    .map((l) => ({ slug: l.slug, date: l.date }))
+);
+
+const surveyUrl = '#'; // TODO: replace with real survey link
 ---
 
-<BaseLayout title="OLGC Confirmation Prep 2026" currentSlug="home">
-  <section class="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white">
-    <div class="mx-auto max-w-3xl px-6 py-20 md:px-10 md:py-28">
-      <div class="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-indigo-700">
-        <span class="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
-        Class of 2026
-      </div>
-      <h1 class="mt-6 text-4xl font-semibold tracking-tight text-slate-900 md:text-6xl">
-        OLGC Confirmation Prep
-      </h1>
-      <p class="mt-6 max-w-2xl text-lg leading-relaxed text-slate-600 md:text-xl">
-        A year-long journey into the heart of the Catholic faith for 8th graders and high schoolers at Our Lady of Good Counsel. Lessons, scripture, and further reading — all in one place.
-      </p>
-      <div class="mt-10 flex flex-wrap items-center gap-4">
-        <a
-          href={firstLessonHref}
-          class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+<BaseLayout title="OLGC Confirmation 2027" currentSlug="home">
+  <!-- HERO: image mosaic + title -->
+  <section class="relative overflow-hidden bg-ink">
+    <!-- Mosaic grid -->
+    <div class="absolute inset-0 grid grid-cols-2 md:grid-cols-3 grid-rows-3 md:grid-rows-2 gap-0">
+      {mosaicImages.map((src, i) => (
+        <div
+          class="relative bg-neutral-900 overflow-hidden"
+          data-mosaic-tile={i}
         >
-          Begin Lesson 1
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <img
+            src={src}
+            alt=""
+            class="absolute inset-0 h-full w-full object-cover"
+            onerror="this.style.display='none'; this.parentElement?.classList.add('mosaic-fallback');"
+          />
+        </div>
+      ))}
+    </div>
+
+    <!-- Soft overlay for text legibility -->
+    <div class="absolute inset-0 bg-gradient-to-b from-black/35 via-black/15 to-black/55"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.55)_0%,transparent_55%)]"></div>
+
+    <!-- Title + buttons -->
+    <div class="relative mx-auto max-w-4xl px-6 py-24 md:px-10 md:py-36 text-center">
+      <h1 class="font-display font-bold uppercase leading-[1.05]">
+        <span class="block text-4xl md:text-6xl tracking-[0.08em] text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.9)]">
+          Our Lady of
+        </span>
+        <span class="block text-5xl md:text-7xl tracking-[0.08em] text-blood-500 drop-shadow-[0_3px_12px_rgba(0,0,0,0.9)] mt-2">
+          Good Counsel
+        </span>
+      </h1>
+
+      <div class="mt-8 flex items-center justify-center gap-5">
+        <span class="h-px w-16 md:w-24 bg-blood-500/60"></span>
+        <span class="font-display font-semibold uppercase text-base md:text-lg text-white/95 tracking-[0.35em]">
+          Confirmation · MMXXVII · NYC
+        </span>
+        <span class="h-px w-16 md:w-24 bg-blood-500/60"></span>
+      </div>
+
+      <p class="mt-8 mx-auto max-w-xl font-serif italic text-lg md:text-xl leading-relaxed text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+        Preparing our hearts and minds for the grace of the Sacrament of Confirmation.
+      </p>
+
+      <div class="mt-12 flex flex-wrap items-center justify-center gap-4">
+        <a
+          id="current-lesson-btn"
+          href={firstLessonHref}
+          class="group inline-flex items-center gap-3 rounded-sm bg-blood-600 px-7 py-3.5 text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-lg shadow-blood-900/40 ring-1 ring-blood-400/30 transition hover:bg-blood-500"
+        >
+          <span class="h-1.5 w-1.5 rounded-full bg-white animate-pulse"></span>
+          Current Lesson
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition group-hover:translate-x-0.5" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
           </svg>
         </a>
-        <a href="#lessons" class="text-sm font-semibold text-slate-700 hover:text-indigo-600 transition">
-          See all lessons →
+        <a
+          href={surveyUrl}
+          class="inline-flex items-center gap-2 rounded-sm border-2 border-white/80 bg-black/30 px-7 py-3.5 text-sm font-semibold uppercase tracking-[0.18em] text-white backdrop-blur transition hover:border-blood-400 hover:text-blood-200"
+        >
+          Take the Survey
         </a>
       </div>
     </div>
   </section>
 
-  <section id="lessons" class="mx-auto max-w-3xl px-6 py-16 md:px-10 md:py-20">
-    <div class="mb-10">
-      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">Curriculum</p>
-      <h2 class="mt-2 text-3xl font-semibold tracking-tight text-slate-900">The 20 Lessons</h2>
-      <p class="mt-3 text-slate-600">
-        Each lesson builds on the last. New lessons are released as the year progresses — check back often.
+  <!-- CURRICULUM -->
+  <section id="lessons" class="mx-auto max-w-3xl px-6 py-16 md:px-10 md:py-24">
+    <div class="mb-10 border-l-4 border-blood-600 pl-5">
+      <p class="text-xs font-semibold uppercase tracking-[0.22em] text-blood-700">The Curriculum</p>
+      <h2 class="mt-2 font-display font-bold uppercase text-3xl md:text-4xl tracking-[0.08em] text-ink">The Lessons</h2>
+      <p class="mt-3 font-serif italic text-neutral-700 text-lg">
+        28 Sundays, from the Feast of our beginning to the fullness of Confirmation.
       </p>
     </div>
 
     <ol class="space-y-2">
-      {lessons.map((l) => (
-        l.published ? (
+      {lessons.map((l) => {
+        const dateShort = formatShortDate(l.date);
+        const dateLong = formatLongDate(l.date);
+        if (l.clickable) {
+          return (
+            <li>
+              <a
+                href={lessonHref(l.slug)}
+                class="group flex items-center gap-4 rounded-sm border border-neutral-300 bg-white p-4 shadow-sm transition hover:border-blood-500 hover:shadow-md"
+              >
+                <span class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-sm bg-ink text-sm font-semibold font-serif text-blood-400 group-hover:bg-blood-700 group-hover:text-white transition">
+                  {String(l.order).padStart(2, '0')}
+                </span>
+                <span class="flex-1 min-w-0">
+                  <span class="block font-semibold text-ink group-hover:text-blood-700">{l.title}</span>
+                  <span class="block text-xs text-neutral-500 mt-0.5" title={dateLong}>{dateLong}</span>
+                </span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-neutral-400 group-hover:text-blood-600 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+              </a>
+            </li>
+          );
+        }
+        const hasTitle = l.title !== 'TBD';
+        return (
           <li>
-            <a
-              href={`${homeHref}lessons/${l.slug}`}
-              class="group flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-indigo-300 hover:shadow-md"
-            >
-              <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-sm font-semibold text-indigo-700 group-hover:bg-indigo-100">
+            <div class="flex items-center gap-4 rounded-sm border border-dashed border-neutral-300 bg-neutral-50 p-4">
+              <span class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-sm bg-neutral-200 text-sm font-semibold font-serif text-neutral-500">
                 {String(l.order).padStart(2, '0')}
               </span>
-              <span class="flex-1">
-                <span class="block font-semibold text-slate-900 group-hover:text-indigo-700">{l.title}</span>
-                <span class="block text-sm text-slate-500">Available now</span>
-              </span>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 group-hover:text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-              </svg>
-            </a>
-          </li>
-        ) : (
-          <li>
-            <div class="flex items-center gap-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-4">
-              <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-400">
-                {String(l.order).padStart(2, '0')}
-              </span>
-              <span class="flex-1">
-                <span class="block font-medium text-slate-500">{l.title}</span>
-                <span class="block text-xs font-semibold uppercase tracking-wider text-slate-400">TBD</span>
+              <span class="flex-1 min-w-0">
+                <span class={`block font-medium ${hasTitle ? 'text-neutral-600' : 'text-neutral-400 italic'}`}>
+                  {hasTitle ? l.title : 'TBD'}
+                </span>
+                <span class="block text-xs text-neutral-500 mt-0.5">{dateLong}</span>
               </span>
             </div>
           </li>
-        )
-      ))}
+        );
+      })}
     </ol>
   </section>
+
+  <!-- Client-side: redirect "Current Lesson" to the lesson for the most recent Sunday ≤ today -->
+  <script is:inline define:vars={{ scheduleJson, baseHref: homeHref }}>
+    try {
+      const schedule = JSON.parse(scheduleJson);
+      const btn = document.getElementById('current-lesson-btn');
+      if (btn && schedule.length) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        // Find the last lesson whose date is <= today
+        let pick = schedule[0];
+        for (const l of schedule) {
+          const [y, m, d] = l.date.split('-').map(Number);
+          const dt = new Date(y, m - 1, d);
+          if (dt <= today) pick = l;
+        }
+        btn.setAttribute('href', baseHref + 'lessons/' + pick.slug);
+      }
+    } catch (e) { /* fallback link already set */ }
+  </script>
+
+  <style>
+    /* If an image fails to load, the tile shows a dark fabric fallback */
+    .mosaic-fallback {
+      background:
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 2px, transparent 2px, transparent 8px),
+        linear-gradient(135deg, #1a0a0a 0%, #0a0a0a 100%);
+    }
+  </style>
 </BaseLayout>

@@ -1,7 +1,7 @@
 ---
 import { getCollection, type CollectionEntry } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { lessons as lessonList } from '../../data/lessons';
+import { lessons as lessonList, formatLongDate } from '../../data/lessons';
 
 export async function getStaticPaths() {
   const entries = await getCollection('lessons');
@@ -20,56 +20,80 @@ const { Content } = await entry.render();
 
 const base = import.meta.env.BASE_URL;
 const homeHref = base.endsWith('/') ? base : `${base}/`;
+const lessonHref = (slug: string) => `${homeHref}lessons/${slug}`;
+
+const meta = lessonList.find((l) => l.slug === entry.slug);
+const dateLong = meta ? formatLongDate(meta.date) : '';
 
 const currentIndex = lessonList.findIndex((l) => l.slug === entry.slug);
 const prev = currentIndex > 0 ? lessonList[currentIndex - 1] : null;
 const next = currentIndex >= 0 && currentIndex < lessonList.length - 1 ? lessonList[currentIndex + 1] : null;
-const lessonHref = (slug: string) => `${homeHref}lessons/${slug}`;
 ---
 
 <BaseLayout title={`Lesson ${entry.data.order} — ${entry.data.title}`} currentSlug={entry.slug}>
   <div class="mx-auto max-w-2xl px-6 py-14 md:px-10 md:py-20">
     <nav class="mb-10 text-sm">
-      <a href={homeHref} class="text-slate-500 hover:text-indigo-600 transition">
-        ← Back to Home
+      <a href={homeHref} class="text-neutral-500 hover:text-blood-700 transition font-serif italic">
+        ← Return Home
       </a>
     </nav>
 
-    <p class="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">
-      Lesson {String(entry.data.order).padStart(2, '0')}
-    </p>
-    <h1 class="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
-      {entry.data.title}
-    </h1>
-    {entry.data.subtitle && (
-      <p class="mt-4 text-xl leading-snug text-slate-600">{entry.data.subtitle}</p>
-    )}
-    {entry.data.scripture && (
-      <p class="mt-3 text-sm italic text-slate-500">{entry.data.scripture}</p>
-    )}
+    <!-- Topic header -->
+    <header class="border-b-2 border-blood-700 pb-8">
+      <div class="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-blood-700">
+        <span>Lesson {String(entry.data.order).padStart(2, '0')}</span>
+        {dateLong && (
+          <>
+            <span class="h-1 w-1 rounded-full bg-blood-700"></span>
+            <span class="text-neutral-600 font-medium normal-case tracking-normal">{dateLong}</span>
+          </>
+        )}
+      </div>
+      <h1 class="mt-4 font-display font-bold uppercase text-4xl md:text-5xl tracking-[0.06em] text-ink leading-[1.1]">
+        {entry.data.title}
+      </h1>
+      {entry.data.subtitle && (
+        <p class="mt-5 font-serif italic text-xl text-neutral-700">{entry.data.subtitle}</p>
+      )}
+      {entry.data.scripture && (
+        <p class="mt-3 text-sm text-blood-700 font-serif">{entry.data.scripture}</p>
+      )}
+    </header>
 
-    <hr class="my-10 border-slate-200" />
-
-    <article class="prose prose-slate prose-lg max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-h2:mt-12 prose-h2:text-2xl prose-h3:mt-8 prose-h3:text-xl prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-slate-900">
+    <!-- Content body: Topic / Outline / Further Reading sections -->
+    <article class="prose prose-neutral prose-lg max-w-none mt-10
+      prose-headings:font-display prose-headings:text-ink prose-headings:tracking-tight
+      prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-5 prose-h2:border-l-4 prose-h2:border-blood-600 prose-h2:pl-4 prose-h2:not-italic prose-h2:uppercase prose-h2:tracking-[0.08em] prose-h2:font-bold
+      prose-h3:text-xl prose-h3:mt-8 prose-h3:font-serif prose-h3:font-semibold
+      prose-p:font-serif prose-p:text-ink/90 prose-p:text-lg prose-p:leading-relaxed
+      prose-a:text-blood-700 prose-a:no-underline hover:prose-a:underline hover:prose-a:text-blood-500
+      prose-strong:text-ink prose-strong:font-semibold
+      prose-li:font-serif prose-li:text-ink/90
+      prose-blockquote:border-l-4 prose-blockquote:border-blood-600 prose-blockquote:bg-blood-50 prose-blockquote:py-2 prose-blockquote:px-5 prose-blockquote:not-italic prose-blockquote:font-serif prose-blockquote:text-ink
+      prose-hr:border-neutral-300">
       <Content />
     </article>
 
-    <nav class="mt-16 flex items-center justify-between border-t border-slate-200 pt-8 text-sm">
-      {prev && prev.published ? (
-        <a href={lessonHref(prev.slug)} class="group flex flex-col text-slate-500 hover:text-indigo-600 transition">
-          <span class="text-xs font-semibold uppercase tracking-wider">← Previous</span>
-          <span class="mt-1 font-medium text-slate-900 group-hover:text-indigo-600">{prev.title}</span>
+    <!-- Prev / Next -->
+    <nav class="mt-16 flex items-center justify-between border-t border-neutral-300 pt-8 text-sm">
+      {prev && prev.clickable ? (
+        <a href={lessonHref(prev.slug)} class="group flex flex-col text-neutral-500 hover:text-blood-700 transition">
+          <span class="text-xs font-semibold uppercase tracking-[0.18em]">← Previous</span>
+          <span class="mt-1 font-serif italic text-ink group-hover:text-blood-700">{prev.title}</span>
         </a>
       ) : <span />}
-      {next && next.published ? (
-        <a href={lessonHref(next.slug)} class="group ml-auto flex flex-col items-end text-right text-slate-500 hover:text-indigo-600 transition">
-          <span class="text-xs font-semibold uppercase tracking-wider">Next →</span>
-          <span class="mt-1 font-medium text-slate-900 group-hover:text-indigo-600">{next.title}</span>
+      {next && next.clickable ? (
+        <a href={lessonHref(next.slug)} class="group ml-auto flex flex-col items-end text-right text-neutral-500 hover:text-blood-700 transition">
+          <span class="text-xs font-semibold uppercase tracking-[0.18em]">Next →</span>
+          <span class="mt-1 font-serif italic text-ink group-hover:text-blood-700">{next.title}</span>
         </a>
       ) : next ? (
-        <div class="ml-auto flex flex-col items-end text-right text-slate-400">
-          <span class="text-xs font-semibold uppercase tracking-wider">Up Next</span>
-          <span class="mt-1 font-medium">{next.title} <span class="text-slate-400">(TBD)</span></span>
+        <div class="ml-auto flex flex-col items-end text-right text-neutral-400">
+          <span class="text-xs font-semibold uppercase tracking-[0.18em]">Up Next</span>
+          <span class="mt-1 font-serif italic">
+            {next.title === 'TBD' ? 'TBD' : next.title}
+            <span class="text-neutral-500 ml-2 text-xs not-italic">(TBD)</span>
+          </span>
         </div>
       ) : <span />}
     </nav>

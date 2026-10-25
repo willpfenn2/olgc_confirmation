@@ -8,7 +8,7 @@ interface Props {
   currentSlug?: string;
 }
 
-const { title, description = 'OLGC Confirmation Prep 2026', currentSlug } = Astro.props;
+const { title, description = 'OLGC Confirmation Prep 2027', currentSlug } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const faviconHref = `${base.endsWith('/') ? base : base + '/'}favicon.svg`;
 ---
@@ -23,26 +23,26 @@ const faviconHref = `${base.endsWith('/') ? base : base + '/'}favicon.svg`;
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cinzel:wght@400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
       rel="stylesheet"
     />
     <title>{title}</title>
   </head>
-  <body class="h-full bg-white font-sans text-slate-800 antialiased">
+  <body class="h-full bg-parchment font-sans text-ink antialiased">
     <Sidebar currentSlug={currentSlug} />
 
     <div class="md:pl-72">
-      <header class="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-200 bg-white/80 px-4 py-3 backdrop-blur md:hidden">
+      <header class="sticky top-0 z-20 flex items-center gap-3 border-b border-neutral-200 bg-parchment/90 px-4 py-3 backdrop-blur md:hidden">
         <button
           id="sidebar-open"
           aria-label="Open menu"
-          class="rounded-md p-2 text-slate-700 hover:bg-slate-100"
+          class="rounded-md p-2 text-ink hover:bg-neutral-200"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm1 4a1 1 0 100 2h12a1 1 0 100-2H4z" clip-rule="evenodd" />
           </svg>
         </button>
-        <div class="text-sm font-semibold text-slate-900">OLGC Confirmation Prep</div>
+        <div class="font-display font-bold uppercase text-sm tracking-[0.2em] text-ink">O · L · G · C Confirmation</div>
       </header>
 
       <main class="min-h-screen">
