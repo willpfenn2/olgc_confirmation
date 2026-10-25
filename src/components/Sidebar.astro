@@ -1,0 +1,109 @@
+---
+import { lessons } from '../data/lessons';
+
+interface Props {
+  currentSlug?: string;
+}
+
+const { currentSlug } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const homeHref = base.endsWith('/') ? base : `${base}/`;
+const lessonHref = (slug: string) => `${homeHref}lessons/${slug}`;
+const isHome = currentSlug === 'home';
+---
+
+<aside
+  id="sidebar"
+  class="fixed inset-y-0 left-0 z-40 flex w-72 flex-col bg-slate-950 text-slate-300 shadow-xl shadow-black/20 transform transition-transform duration-200 -translate-x-full md:translate-x-0"
+>
+  <div class="flex items-center justify-between px-6 pt-7 pb-5">
+    <a href={homeHref} class="group">
+      <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-400/80">OLGC</div>
+      <div class="mt-1 text-lg font-semibold leading-tight text-white group-hover:text-indigo-200 transition">
+        Confirmation Prep
+      </div>
+      <div class="text-xs text-slate-500">Class of 2026</div>
+    </a>
+    <button
+      id="sidebar-close"
+      aria-label="Close sidebar"
+      class="md:hidden -mr-2 rounded p-2 text-slate-400 hover:bg-slate-800 hover:text-white"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="mx-6 border-t border-slate-800/80"></div>
+
+  <nav class="flex-1 overflow-y-auto px-3 py-4">
+    <a
+      href={homeHref}
+      class:list={[
+        'group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition',
+        isHome
+          ? 'bg-slate-800/60 text-white border-l-[3px] border-indigo-400 pl-[9px]'
+          : 'text-slate-400 hover:bg-slate-900 hover:text-white border-l-[3px] border-transparent',
+      ]}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-3a1 1 0 011-1h2a1 1 0 011 1v3a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+      </svg>
+      Home
+    </a>
+
+    <div class="mt-6 px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+      Lessons
+    </div>
+
+    <ul class="space-y-0.5">
+      {lessons.map((l) => {
+        const isActive = currentSlug === l.slug;
+        const commonLeft = 'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-[11px] font-semibold';
+        if (l.published) {
+          return (
+            <li>
+              <a
+                href={lessonHref(l.slug)}
+                class:list={[
+                  'group flex items-start gap-3 rounded-md px-3 py-2 text-sm font-medium transition',
+                  isActive
+                    ? 'bg-slate-800/60 text-white border-l-[3px] border-indigo-400 pl-[9px]'
+                    : 'text-slate-300 hover:bg-slate-900 hover:text-white border-l-[3px] border-transparent',
+                ]}
+              >
+                <span class:list={[commonLeft, isActive ? 'bg-indigo-500/20 text-indigo-200' : 'bg-slate-800 text-slate-400 group-hover:text-slate-200']}>
+                  {String(l.order).padStart(2, '0')}
+                </span>
+                <span class="pt-0.5 leading-snug">{l.title}</span>
+              </a>
+            </li>
+          );
+        }
+        return (
+          <li>
+            <div class="flex items-start gap-3 rounded-md px-3 py-2 text-sm border-l-[3px] border-transparent cursor-not-allowed">
+              <span class={`${commonLeft} bg-slate-900 text-slate-600`}>
+                {String(l.order).padStart(2, '0')}
+              </span>
+              <span class="flex flex-col pt-0.5 leading-snug">
+                <span class="text-slate-500">{l.title}</span>
+                <span class="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-600">TBD</span>
+              </span>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  </nav>
+
+  <div class="border-t border-slate-800/80 px-6 py-4 text-xs text-slate-500">
+    Our Lady of Good Counsel
+  </div>
+</aside>
+
+<div
+  id="sidebar-overlay"
+  class="fixed inset-0 z-30 hidden bg-slate-950/60 backdrop-blur-sm md:hidden"
+></div>

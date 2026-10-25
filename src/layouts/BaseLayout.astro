@@ -1,0 +1,75 @@
+---
+import '../styles/global.css';
+import Sidebar from '../components/Sidebar.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  currentSlug?: string;
+}
+
+const { title, description = 'OLGC Confirmation Prep 2026', currentSlug } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const faviconHref = `${base.endsWith('/') ? base : base + '/'}favicon.svg`;
+---
+
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={faviconHref} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>{title}</title>
+  </head>
+  <body class="h-full bg-white font-sans text-slate-800 antialiased">
+    <Sidebar currentSlug={currentSlug} />
+
+    <div class="md:pl-72">
+      <header class="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-200 bg-white/80 px-4 py-3 backdrop-blur md:hidden">
+        <button
+          id="sidebar-open"
+          aria-label="Open menu"
+          class="rounded-md p-2 text-slate-700 hover:bg-slate-100"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm1 4a1 1 0 100 2h12a1 1 0 100-2H4z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        <div class="text-sm font-semibold text-slate-900">OLGC Confirmation Prep</div>
+      </header>
+
+      <main class="min-h-screen">
+        <slot />
+      </main>
+    </div>
+
+    <script is:inline>
+      const openBtn = document.getElementById('sidebar-open');
+      const closeBtn = document.getElementById('sidebar-close');
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+
+      function openSidebar() {
+        if (!sidebar || !overlay) return;
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+      }
+      function closeSidebar() {
+        if (!sidebar || !overlay) return;
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+      }
+
+      openBtn?.addEventListener('click', openSidebar);
+      closeBtn?.addEventListener('click', closeSidebar);
+      overlay?.addEventListener('click', closeSidebar);
+    </script>
+  </body>
+</html>
